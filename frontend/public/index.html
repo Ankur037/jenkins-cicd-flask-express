@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Feedback App</title>
+  <style>
+    body { font-family: sans-serif; max-width: 500px; margin: 60px auto; }
+    label { display: block; margin-top: 15px; font-weight: bold; }
+    input, textarea { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
+    button { margin-top: 20px; padding: 10px 20px; }
+    nav { margin-bottom: 20px; }
+    nav a { margin-right: 15px; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="/">Submit Feedback</a>
+    <a href="/list">View Feedback</a>
+  </nav>
+  <h1>Submit Feedback</h1>
+  <form action="/submit" method="POST">
+    <label for="name">Name</label>
+    <input type="text" id="name" name="name" required>
+
+    <label for="message">Message</label>
+    <textarea id="message" name="message" rows="4" required></textarea>
+
+    <button type="submit">Submit</button>
+  </form>
+</body>
+</html>
