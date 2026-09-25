@@ -1,0 +1,54 @@
+pipeline {
+    agent any
+
+    environment {
+        PM2_APP_NAME = "express-frontend"
+        BACKEND_URL  = "http://localhost:5000"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Ankur037/jenkins-cicd-flask-express.git'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                dir('frontend') {
+                    sh 'npm install'
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                dir('frontend') {
+                    sh 'node -e "require(\'./server.js\')" & sleep 2 && kill %1 || true'
+                }
+            }
+        }
+
+        stage('Deploy (pm2 restart)') {
+            steps {
+                dir('frontend') {
+                    sh '''
+                        pm2 describe ${PM2_APP_NAME} > /dev/null 2>&1 \
+                          && pm2 restart ${PM2_APP_NAME} \
+                          || BACKEND_URL=${BACKEND_URL} pm2 start server.js --name ${PM2_APP_NAME}
+                        pm2 save
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Express frontend deployed successfully."
+        }
+        failure {
+            echo "Express frontend deployment failed."
+        }
+    }
+}

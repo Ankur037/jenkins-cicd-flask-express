@@ -1,0 +1,62 @@
+pipeline {
+    agent any
+
+    environment {
+        APP_DIR = "/home/ec2-user/jenkins-cicd-flask-express/backend"
+        PM2_APP_NAME = "flask-backend"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Ankur037/jenkins-cicd-flask-express.git'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                dir('backend') {
+                    sh '''
+                        python3 -m venv venv || true
+                        . venv/bin/activate
+                        pip install -r requirements.txt
+                    '''
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                dir('backend') {
+                    sh '''
+                        . venv/bin/activate
+                        python -c "import app; print('App imports cleanly')"
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy (pm2 restart)') {
+            steps {
+                dir('backend') {
+                    sh '''
+                        . venv/bin/activate
+                        pm2 describe ${PM2_APP_NAME} > /dev/null 2>&1 \
+                          && pm2 restart ${PM2_APP_NAME} \
+                          || pm2 start venv/bin/python --name ${PM2_APP_NAME} --interpreter none -- app.py
+                        pm2 save
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Flask backend deployed successfully."
+        }
+        failure {
+            echo "Flask backend deployment failed."
+        }
+    }
+}
