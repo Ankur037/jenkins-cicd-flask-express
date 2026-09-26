@@ -3,7 +3,7 @@ set -e
 
 # --- Base dependencies ---
 dnf update -y
-dnf install -y git python3 python3-pip java-17-amazon-corretto
+dnf install -y git python3 python3-pip java-21-amazon-corretto
 
 # --- Node.js ---
 curl -fsSL https://rpm.nodesource.com/setup_20.x | bash -
@@ -12,17 +12,7 @@ dnf install -y nodejs
 # --- pm2 (process manager for both apps) ---
 npm install -g pm2
 
-# --- Jenkins ---
-wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
-rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
-dnf install -y jenkins
-systemctl enable jenkins
-systemctl start jenkins
-
-# --- Give jenkins user access to run pm2/npm/python (needed for pipeline deploy stages) ---
-usermod -aG wheel jenkins
-
-# --- Clone the app and do an initial manual start (Jenkins pipelines will manage restarts later) ---
+# --- Clone the app and start it FIRST, so app deployment never depends on Jenkins succeeding ---
 cd /home/ec2-user
 git clone https://github.com/Ankur037/jenkins-cicd-flask-express.git
 cd jenkins-cicd-flask-express
@@ -42,4 +32,16 @@ pm2 save
 pm2 startup systemd -u ec2-user --hp /home/ec2-user | tail -1 > /tmp/pm2-startup-cmd.sh
 bash /tmp/pm2-startup-cmd.sh || true
 
-echo "Setup complete" > /home/ec2-user/setup-done.txt
+echo "App setup complete" > /home/ec2-user/setup-done.txt
+
+# --- Jenkins install is best-effort from here on: don't let a Jenkins failure mark the whole script as failed ---
+set +e
+
+curl -fsSL https://pkg.jenkins.io/redhat-stable/jenkins.repo -o /etc/yum.repos.d/jenkins.repo
+rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+dnf install -y jenkins
+usermod -aG wheel jenkins
+systemctl enable jenkins
+systemctl start jenkins
+
+echo "Jenkins setup attempted" > /home/ec2-user/jenkins-setup-done.txt
