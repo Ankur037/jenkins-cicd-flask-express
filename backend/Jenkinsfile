@@ -41,10 +41,10 @@ pipeline {
                 dir('backend') {
                     sh '''
                         . venv/bin/activate
-                        pm2 describe ${PM2_APP_NAME} > /dev/null 2>&1 \
-                          && pm2 restart ${PM2_APP_NAME} \
-                          || pm2 start venv/bin/python --name ${PM2_APP_NAME} --interpreter none -- app.py
-                        pm2 save
+                        sudo -u ec2-user pm2 describe ${PM2_APP_NAME} > /dev/null 2>&1 \
+                          && sudo -u ec2-user pm2 restart ${PM2_APP_NAME} \
+                          || sudo -u ec2-user pm2 start venv/bin/python --name ${PM2_APP_NAME} --interpreter none -- app.py
+                        sudo -u ec2-user pm2 save
                     '''
                 }
             }

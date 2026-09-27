@@ -33,10 +33,10 @@ pipeline {
             steps {
                 dir('frontend') {
                     sh '''
-                        pm2 describe ${PM2_APP_NAME} > /dev/null 2>&1 \
-                          && pm2 restart ${PM2_APP_NAME} \
-                          || BACKEND_URL=${BACKEND_URL} pm2 start server.js --name ${PM2_APP_NAME}
-                        pm2 save
+                        sudo -u ec2-user pm2 describe ${PM2_APP_NAME} > /dev/null 2>&1 \
+                          && sudo -u ec2-user pm2 restart ${PM2_APP_NAME} \
+                          || BACKEND_URL=${BACKEND_URL} sudo -u ec2-user pm2 start server.js --name ${PM2_APP_NAME}
+                        sudo -u ec2-user pm2 save
                     '''
                 }
             }
